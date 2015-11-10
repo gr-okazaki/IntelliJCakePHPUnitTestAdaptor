@@ -19,6 +19,7 @@
  */
 set_time_limit(0);
 ini_set('display_errors', 1);
+define('FULL_BASE_URL',"http://localhost");
 /**
  * Use the DS to separate the directories in other defines
  */
@@ -114,9 +115,16 @@ class MyCakeTestSuiteCommand extends CakeTestSuiteCommand
 {
 	protected function handleArguments(array $argv)
 	{
+		$argv[] = "--stderr";
 		parent::handleArguments($argv);
-		$this->arguments['printer'] = new IDE_PHPUnit_TextUI_ResultPrinter(null);
-		$this->arguments['listeners'][] = new IDE_PHPUnit_Framework_TestListener($this->arguments['printer']);
+		if (isset($this->arguments['printer'])) {
+			$printer = $this->arguments['printer'];
+		} else {
+			$printer = null;
+		}
+		$printer = new IDE_PHPUnit_TextUI_ResultPrinter($printer);
+		$this->arguments['printer'] = $printer;
+		$this->arguments['listeners'][] = new IDE_PHPUnit_Framework_TestListener($printer);
 	}
 }
 
@@ -150,7 +158,6 @@ class MyCakeTestSuiteDispatcher extends CakeTestSuiteDispatcher {
 	 * @return void
 	 */
 	protected function _myrunTestCase() {
-		$this->params['output'] = "IDE_PHPUnit_TextUI_ResultPrinter";
 		$commandArgs = array(
 			'case' => $this->params['case'],
 			'core' => $this->params['core'],
@@ -197,7 +204,6 @@ class MyTestShell extends TestShell
 	 */
 	public function main() {
 		$args = $this->_parseArgs();
-
 		if (empty($args['case'])) {
 			return $this->available();
 		}
